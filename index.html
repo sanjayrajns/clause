@@ -1,0 +1,1840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ClauseWise AI — Contract Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    /* ===========================
+       CSS RESET & VARIABLES
+    =========================== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-base: #FAF9F7;
+      --bg-card: #FFFFFF;
+      --bg-card-warm: #FDFCFB;
+      --bg-sidebar: #1C1917;
+      --bg-sidebar-hover: #292524;
+      --bg-sidebar-active: #3730A3;
+      --text-primary: #1C1917;
+      --text-secondary: #78716C;
+      --text-muted: #A8A29E;
+      --text-inverse: #FAFAF9;
+      --accent: #4F46E5;
+      --accent-hover: #4338CA;
+      --accent-light: #EEF2FF;
+      --success: #16A34A;
+      --success-bg: #F0FDF4;
+      --warning: #D97706;
+      --warning-bg: #FFFBEB;
+      --danger: #DC2626;
+      --danger-bg: #FEF2F2;
+      --border: #E8E5E0;
+      --border-light: #F0EDE8;
+      --shadow: 0 1px 3px rgba(28,25,23,0.06), 0 1px 2px rgba(28,25,23,0.04);
+      --shadow-md: 0 4px 12px rgba(28,25,23,0.08), 0 2px 4px rgba(28,25,23,0.04);
+      --radius: 10px;
+      --radius-sm: 6px;
+      --radius-lg: 14px;
+      --sidebar-width: 220px;
+      --sidebar-collapsed: 60px;
+      --insights-width: 280px;
+    }
+
+    html, body { height: 100%; font-family: 'Inter', -apple-system, sans-serif; font-size: 14px; color: var(--text-primary); background: var(--bg-base); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+    #root { height: 100%; }
+    button { font-family: inherit; cursor: pointer; border: none; background: none; }
+    input, textarea, select { font-family: inherit; }
+    * { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+    *::-webkit-scrollbar { width: 5px; height: 5px; }
+    *::-webkit-scrollbar-track { background: transparent; }
+    *::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+    /* ===========================
+       LAYOUT
+    =========================== */
+    .app-layout {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .main-area {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    .page-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    /* ===========================
+       SIDEBAR
+    =========================== */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--bg-sidebar);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      transition: width 0.25s ease;
+      overflow: hidden;
+      z-index: 10;
+    }
+    .sidebar.collapsed { width: var(--sidebar-collapsed); }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 18px 14px 14px;
+      flex-shrink: 0;
+    }
+    .logo-mark {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: white;
+      flex-shrink: 0;
+    }
+    .logo-text { overflow: hidden; white-space: nowrap; }
+    .logo-name { font-size: 14px; font-weight: 600; color: var(--text-inverse); letter-spacing: -0.01em; }
+    .logo-sub { font-size: 11px; color: #A8A29E; }
+
+    .sidebar-toggle-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      color: #A8A29E;
+      transition: background 0.15s;
+      flex-shrink: 0;
+      margin-left: auto;
+    }
+    .sidebar-toggle-btn:hover { background: var(--bg-sidebar-hover); color: white; }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 8px 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      height: 36px;
+      padding: 0 12px;
+      border-radius: 8px;
+      margin: 2px 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+      overflow: hidden;
+      text-decoration: none;
+      color: #D6D3D1;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .nav-item:hover { background: var(--bg-sidebar-hover); color: white; }
+    .nav-item.active { background: var(--bg-sidebar-active); color: white; }
+    .nav-item svg { flex-shrink: 0; }
+    .nav-label { overflow: hidden; text-overflow: ellipsis; }
+
+    .sidebar-divider { height: 1px; background: #292524; margin: 8px 0; flex-shrink: 0; }
+
+    .sidebar-user {
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: white;
+      flex-shrink: 0;
+    }
+    .user-info { flex: 1; overflow: hidden; }
+    .user-name { font-size: 13px; font-weight: 600; color: var(--text-inverse); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-role { font-size: 11px; color: #A8A29E; }
+    .settings-btn { color: #A8A29E; display: flex; align-items: center; padding: 4px; border-radius: 4px; transition: color 0.15s; flex-shrink: 0; }
+    .settings-btn:hover { color: white; }
+
+    /* ===========================
+       INSIGHTS PANEL
+    =========================== */
+    .insights-panel {
+      width: var(--insights-width);
+      background: var(--bg-base);
+      border-left: 1px solid var(--border);
+      flex-shrink: 0;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .insights-title { font-size: 14px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.01em; }
+
+    .risk-section {}
+    .section-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 10px; }
+
+    .risk-gauge-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .risk-score-num { font-size: 28px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; }
+    .risk-badge { font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+    .risk-badge.high { background: var(--danger-bg); color: var(--danger); }
+    .risk-badge.medium { background: var(--warning-bg); color: var(--warning); }
+    .risk-badge.low { background: var(--success-bg); color: var(--success); }
+
+    .contract-details { display: flex; flex-direction: column; gap: 10px; }
+    .detail-row {}
+    .detail-label { font-size: 11px; color: var(--text-muted); margin-bottom: 2px; }
+    .detail-value { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+
+    .clause-summary { display: flex; flex-direction: column; gap: 6px; }
+    .clause-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+    }
+    .clause-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .clause-dot.danger { background: var(--danger); }
+    .clause-dot.warning { background: var(--warning); }
+    .clause-dot.success { background: var(--success); }
+    .clause-dot.indigo { background: var(--accent); }
+    .clause-label { font-size: 12px; color: var(--text-secondary); flex: 1; }
+    .clause-count {
+      width: 22px; height: 22px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700;
+    }
+    .clause-count.danger { background: var(--danger-bg); color: var(--danger); }
+    .clause-count.warning { background: var(--warning-bg); color: var(--warning); }
+    .clause-count.success { background: var(--success-bg); color: var(--success); }
+    .clause-count.indigo { background: var(--accent-light); color: var(--accent); }
+
+    /* ===========================
+       CONTRACT HEADER BAR
+    =========================== */
+    .contract-header {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-shrink: 0;
+    }
+    .contract-icon {
+      width: 36px; height: 36px;
+      background: #F5F3F0;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .contract-info { flex: 1; min-width: 0; }
+    .contract-name {
+      font-size: 14px; font-weight: 600; color: var(--text-primary);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      letter-spacing: -0.01em;
+    }
+    .contract-meta { font-size: 12px; color: var(--text-secondary); margin-top: 1px; }
+    .badge-analysed {
+      background: #DCFCE7; color: #15803D;
+      font-size: 11px; font-weight: 600;
+      padding: 3px 9px; border-radius: 20px;
+      flex-shrink: 0;
+    }
+
+    /* ===========================
+       CHAT AREA
+    =========================== */
+    .chat-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      background: var(--bg-base);
+    }
+
+    .msg-wrap { display: flex; flex-direction: column; gap: 6px; }
+    .msg-wrap.user { align-items: flex-end; }
+    .msg-wrap.ai { align-items: flex-start; }
+
+    .msg-row { display: flex; align-items: flex-end; gap: 10px; max-width: 75%; }
+    .msg-wrap.user .msg-row { flex-direction: row-reverse; }
+
+    .msg-avatar {
+      width: 28px; height: 28px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700; color: white;
+      flex-shrink: 0; align-self: flex-end;
+    }
+    .msg-avatar.user { background: var(--accent); }
+    .msg-avatar.ai { background: var(--accent); }
+
+    .msg-bubble {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      padding: 12px 16px;
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text-primary);
+    }
+    .msg-wrap.user .msg-bubble { border-radius: 12px 12px 4px 12px; }
+    .msg-wrap.ai .msg-bubble { border-radius: 12px 12px 12px 4px; padding: 14px 16px; }
+
+    .msg-time { font-size: 11px; color: var(--text-muted); padding: 0 4px; }
+    .msg-wrap.user .msg-time { text-align: right; }
+
+    .msg-text strong { font-weight: 600; color: var(--text-primary); }
+    .msg-text p { margin-bottom: 6px; }
+    .msg-text p:last-child { margin-bottom: 0; }
+    .msg-text ol, .msg-text ul { padding-left: 18px; margin: 6px 0; }
+    .msg-text li { margin-bottom: 3px; }
+
+    .evidence-card {
+      background: #F8F7FF;
+      border: 1px solid #E0E7FF;
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      max-width: 400px;
+      margin-left: 38px;
+    }
+    .evidence-icon { color: var(--accent); flex-shrink: 0; font-size: 14px; font-weight: 700; }
+    .evidence-info { flex: 1; min-width: 0; }
+    .evidence-source { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+    .evidence-page { font-size: 11px; color: var(--text-muted); }
+    .evidence-link {
+      font-size: 12px; color: var(--accent); font-weight: 500;
+      display: flex; align-items: center; gap: 3px;
+      white-space: nowrap; flex-shrink: 0;
+      transition: color 0.15s;
+    }
+    .evidence-link:hover { color: var(--accent-hover); }
+
+    /* Suggested Questions */
+    .suggested-wrap {
+      border-top: 1px solid var(--border-light);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg-base);
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+    .suggested-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); white-space: nowrap; }
+    .suggested-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+    .suggested-pill {
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      border-radius: 20px;
+      padding: 6px 13px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      transition: border-color 0.15s, background 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+    .suggested-pill:hover { border-color: var(--accent); background: var(--accent-light); color: var(--accent); }
+
+    /* Chat Input */
+    .chat-input-area {
+      padding: 12px 24px 16px;
+      background: var(--bg-base);
+      flex-shrink: 0;
+    }
+    .chat-input-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: 6px 6px 6px 14px;
+      transition: border-color 0.2s;
+    }
+    .chat-input-container:focus-within { border-color: var(--accent); }
+    .attach-btn { color: var(--text-muted); display: flex; padding: 4px; border-radius: 4px; transition: color 0.15s; }
+    .attach-btn:hover { color: var(--text-secondary); }
+    .chat-input {
+      flex: 1; border: none; outline: none; font-size: 14px;
+      color: var(--text-primary); background: transparent; resize: none;
+      padding: 4px 0; max-height: 120px; line-height: 1.5;
+    }
+    .chat-input::placeholder { color: var(--text-muted); }
+    .send-btn {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--accent); color: white;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s, transform 0.1s;
+      flex-shrink: 0;
+    }
+    .send-btn:hover:not(:disabled) { background: var(--accent-hover); transform: scale(1.05); }
+    .send-btn:disabled { background: var(--border); color: var(--text-muted); cursor: not-allowed; transform: none; }
+
+    /* ===========================
+       PAGE HEADER (generic)
+    =========================== */
+    .page-header {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 28px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .page-header-left {}
+    .page-h1 { font-size: 20px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; }
+    .page-subtitle { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+
+    .page-scroll { flex: 1; overflow-y: auto; padding: 24px 28px; }
+
+    /* ===========================
+       BUTTONS
+    =========================== */
+    .btn-primary {
+      background: var(--accent); color: white;
+      border-radius: var(--radius-sm); padding: 8px 16px;
+      font-size: 13px; font-weight: 600;
+      display: flex; align-items: center; gap: 7px;
+      transition: background 0.15s;
+    }
+    .btn-primary:hover { background: var(--accent-hover); }
+
+    .btn-secondary {
+      background: var(--bg-card); color: var(--text-secondary);
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 7px 14px; font-size: 13px; font-weight: 500;
+      display: flex; align-items: center; gap: 6px;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .btn-secondary:hover { border-color: var(--text-muted); color: var(--text-primary); }
+
+    /* ===========================
+       CARDS
+    =========================== */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+
+    /* ===========================
+       ANALYSIS PAGE
+    =========================== */
+    .analysis-grid { display: flex; flex-direction: column; gap: 20px; }
+
+    .risk-overview-card {
+      display: flex;
+      gap: 32px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .risk-gauge-side { text-align: center; }
+    .risk-mini-stats { display: flex; gap: 20px; flex-wrap: wrap; }
+    .mini-stat {
+      display: flex; flex-direction: column; gap: 4px;
+      padding: 14px 18px; border-radius: var(--radius-sm);
+      min-width: 110px;
+    }
+    .mini-stat.danger { background: var(--danger-bg); border: 1px solid #FECACA; }
+    .mini-stat.warning { background: var(--warning-bg); border: 1px solid #FDE68A; }
+    .mini-stat.success { background: var(--success-bg); border: 1px solid #BBF7D0; }
+    .mini-stat-num { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; }
+    .mini-stat.danger .mini-stat-num { color: var(--danger); }
+    .mini-stat.warning .mini-stat-num { color: var(--warning); }
+    .mini-stat.success .mini-stat-num { color: var(--success); }
+    .mini-stat-label { font-size: 12px; color: var(--text-secondary); }
+
+    .findings-section { display: flex; flex-direction: column; gap: 10px; }
+    .findings-title { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; letter-spacing: -0.01em; }
+
+    .finding-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg-card);
+      overflow: hidden;
+    }
+    .finding-card-inner {
+      display: flex;
+      border-left: 3px solid;
+      padding: 14px 16px;
+    }
+    .finding-card.high .finding-card-inner { border-left-color: var(--danger); }
+    .finding-card.medium .finding-card-inner { border-left-color: var(--warning); }
+    .finding-card-body { flex: 1; }
+    .finding-num { font-size: 11px; font-weight: 600; color: var(--text-muted); margin-bottom: 3px; }
+    .finding-title { font-size: 14px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.01em; }
+    .finding-ref { font-size: 12px; color: var(--text-muted); margin: 2px 0; }
+    .finding-excerpt { font-size: 13px; color: var(--text-secondary); font-style: italic; margin: 6px 0 4px; line-height: 1.5; border-left: 2px solid var(--border); padding-left: 10px; }
+    .finding-risk { font-size: 13px; color: var(--text-secondary); }
+    .finding-risk strong { color: var(--text-primary); font-weight: 600; }
+
+    .missing-card {
+      background: var(--warning-bg);
+      border: 1px solid #FDE68A;
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+    }
+    .missing-title { font-size: 14px; font-weight: 600; color: var(--warning); margin-bottom: 8px; display: flex; align-items: center; gap: 7px; }
+    .missing-list { list-style: none; display: flex; flex-direction: column; gap: 5px; }
+    .missing-list li { font-size: 13px; color: var(--text-secondary); display: flex; align-items: center; gap: 7px; }
+    .missing-list li::before { content: '—'; color: var(--warning); font-weight: 700; }
+
+    .obligations-mini { margin-top: 4px; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead th { text-align: left; padding: 10px 14px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); border-bottom: 1px solid var(--border); background: var(--bg-base); }
+    tbody td { padding: 11px 14px; border-bottom: 1px solid var(--border-light); color: var(--text-secondary); vertical-align: middle; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: var(--bg-base); }
+
+    /* ===========================
+       COMPARE PAGE
+    =========================== */
+    .compare-selectors {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;
+    }
+    .contract-selector-badge {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 8px 14px;
+      font-size: 13px; font-weight: 600; color: var(--text-primary);
+    }
+    .vs-label { font-size: 12px; font-weight: 700; color: var(--text-muted); padding: 0 2px; }
+    .compare-summary-bar {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+      font-size: 13px;
+    }
+    .compare-sum-item { display: flex; align-items: center; gap: 6px; }
+    .compare-sum-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+    .status-badge { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+    .status-badge.differs { background: var(--warning-bg); color: var(--warning); }
+    .status-badge.missing { background: var(--danger-bg); color: var(--danger); }
+    .status-badge.match { background: var(--success-bg); color: var(--success); }
+
+    /* ===========================
+       OBLIGATIONS PAGE
+    =========================== */
+    .filter-tabs { display: flex; gap: 4px; margin-bottom: 16px; }
+    .filter-tab {
+      padding: 7px 16px; border-radius: 20px; font-size: 13px; font-weight: 500;
+      color: var(--text-secondary); border: 1px solid var(--border); background: var(--bg-card);
+      transition: all 0.15s;
+    }
+    .filter-tab.active { background: var(--accent); color: white; border-color: var(--accent); }
+    .filter-tab:hover:not(.active) { border-color: var(--text-muted); color: var(--text-primary); }
+
+    .obligation-status { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+    .obligation-status.upcoming { background: var(--accent-light); color: var(--accent); }
+    .obligation-status.pending { background: var(--warning-bg); color: var(--warning); }
+    .obligation-status.active { background: var(--success-bg); color: var(--success); }
+    .obligation-status.overdue { background: var(--danger-bg); color: var(--danger); }
+
+    /* ===========================
+       CONTRACTS PAGE
+    =========================== */
+    .search-bar-wrap { display: flex; gap: 10px; margin-bottom: 16px; }
+    .search-input-wrap {
+      flex: 1; display: flex; align-items: center; gap: 8px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 8px 12px;
+    }
+    .search-input-wrap:focus-within { border-color: var(--accent); }
+    .search-input { flex: 1; border: none; outline: none; font-size: 13px; color: var(--text-primary); background: transparent; }
+    .search-input::placeholder { color: var(--text-muted); }
+
+    .contract-row { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-bottom: 1px solid var(--border-light); cursor: pointer; transition: background 0.1s; }
+    .contract-row:last-child { border-bottom: none; }
+    .contract-row:hover { background: var(--bg-base); }
+    .contract-row-icon {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: #F5F3F0; border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .contract-row-info { flex: 1; min-width: 0; }
+    .contract-row-name { font-size: 13px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .contract-row-meta { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+    .contract-row-badges { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+
+    .risk-pill { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; }
+    .risk-pill.high { background: var(--danger-bg); color: var(--danger); }
+    .risk-pill.medium { background: var(--warning-bg); color: var(--warning); }
+    .risk-pill.low { background: var(--success-bg); color: var(--success); }
+
+    .status-pill { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; }
+    .status-pill.analysed { background: var(--success-bg); color: var(--success); }
+    .status-pill.reviewing { background: var(--warning-bg); color: var(--warning); }
+    .status-pill.pending { background: var(--accent-light); color: var(--accent); }
+
+    /* ===========================
+       MODALS
+    =========================== */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.4);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000;
+      animation: fadeIn 0.15s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+    .modal {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2), 0 8px 20px rgba(0,0,0,0.1);
+      display: flex; flex-direction: column;
+      animation: slideUp 0.2s ease;
+      max-height: 90vh;
+    }
+    .modal-doc { width: 700px; height: 85vh; }
+    .modal-upload { width: 500px; }
+
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 22px 14px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .modal-title { font-size: 15px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.01em; }
+    .modal-close {
+      width: 30px; height: 30px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-muted); transition: background 0.15s, color 0.15s;
+    }
+    .modal-close:hover { background: var(--bg-base); color: var(--text-primary); }
+
+    .modal-toolbar {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 22px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-base);
+      flex-shrink: 0;
+    }
+    .page-indicator { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
+    .page-nav-btn {
+      width: 28px; height: 28px; border-radius: 5px;
+      border: 1px solid var(--border); background: var(--bg-card);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-secondary); transition: border-color 0.15s;
+    }
+    .page-nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .modal-doc-body {
+      flex: 1; overflow-y: auto;
+      padding: 32px 40px;
+      font-size: 14px; line-height: 1.8; color: var(--text-secondary);
+      font-family: 'Georgia', serif;
+    }
+    .doc-section-label { font-size: 11px; font-weight: 600; font-family: 'Inter', sans-serif; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); margin-bottom: 4px; }
+    .doc-highlight {
+      background: #FEF3C7;
+      border-radius: 3px;
+      padding: 2px 0;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+    .doc-annotation {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--accent-light); border: 1px solid #C7D2FE;
+      border-radius: 6px; padding: 8px 12px; margin: 12px 0;
+      font-family: 'Inter', sans-serif;
+    }
+    .doc-annotation-text { font-size: 12px; font-weight: 600; color: var(--accent); }
+
+    /* Upload Modal */
+    .modal-body { padding: 22px; }
+    .dropzone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 40px 24px;
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+      cursor: pointer; transition: border-color 0.2s, background 0.2s;
+      text-align: center;
+    }
+    .dropzone.drag-over { border-color: var(--accent); background: var(--accent-light); }
+    .dropzone:hover { border-color: var(--accent); }
+    .drop-title { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+    .drop-sub { font-size: 13px; color: var(--text-secondary); }
+    .drop-hint { font-size: 12px; color: var(--text-muted); }
+
+    .upload-success {
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      padding: 24px; text-align: center;
+    }
+    .upload-success-icon { width: 48px; height: 48px; border-radius: 50%; background: var(--success-bg); border: 1px solid #BBF7D0; display: flex; align-items: center; justify-content: center; }
+    .upload-success-title { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+    .upload-success-sub { font-size: 13px; color: var(--text-secondary); }
+
+    .upload-fields { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+    .field-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 5px; }
+    .field-input {
+      width: 100%; padding: 9px 12px;
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      font-size: 13px; color: var(--text-primary); font-family: inherit;
+      outline: none; transition: border-color 0.15s;
+    }
+    .field-input:focus { border-color: var(--accent); }
+    .field-select {
+      width: 100%; padding: 9px 12px;
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      font-size: 13px; color: var(--text-primary); font-family: inherit;
+      outline: none; background: white; transition: border-color 0.15s; cursor: pointer;
+    }
+    .field-select:focus { border-color: var(--accent); }
+
+    .modal-footer { padding: 14px 22px; border-top: 1px solid var(--border); flex-shrink: 0; }
+
+    /* ===========================
+       RESPONSIVE
+    =========================== */
+    @media (max-width: 1024px) {
+      .insights-panel { display: none; }
+    }
+    @media (max-width: 768px) {
+      :root { --sidebar-width: var(--sidebar-collapsed); }
+      .logo-text, .nav-label, .user-info, .settings-btn { display: none; }
+      .modal-doc { width: 95vw; }
+      .modal-upload { width: 95vw; }
+      .risk-overview-card { flex-direction: column; align-items: flex-start; }
+      .page-scroll { padding: 16px; }
+      .chat-area { padding: 16px; }
+      .suggested-wrap { padding: 10px 16px; }
+      .chat-input-area { padding: 10px 16px 14px; }
+    }
+    @media (max-width: 480px) {
+      .compare-selectors { flex-direction: column; align-items: flex-start; }
+      .mini-stat { min-width: 90px; }
+    }
+
+    /* ===========================
+       MISC HELPERS
+    =========================== */
+    .divider { height: 1px; background: var(--border); margin: 8px 0; }
+    .text-muted { color: var(--text-muted); }
+    .text-secondary { color: var(--text-secondary); }
+    .gap-2 { gap: 8px; }
+    .flex { display: flex; }
+    .items-center { align-items: center; }
+    .justify-between { justify-content: space-between; }
+    .font-semibold { font-weight: 600; }
+    .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .upload-progress-bar-wrap { width: 100%; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; margin-top: 8px; }
+    .upload-progress-bar { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.3s ease; }
+
+    .search-icon { color: var(--text-muted); flex-shrink: 0; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useCallback } = React;
+
+    // ===========================
+    // MOCK DATA
+    // ===========================
+    const MOCK_RESPONSES = {
+      termination: {
+        text: "The termination notice period is **30 days**.\n\nAccording to Section 12.3, either party may terminate the agreement by providing written notice of 30 days to the other party. This notice must be delivered via certified mail or electronic communication to the designated representative.",
+        source: "Section 12.3 – Termination",
+        page: 17
+      },
+      penalty: {
+        text: "Yes, there are penalty charges outlined in this agreement.\n\nSection 4.5 specifies a **1.5% monthly late fee** on overdue invoices. Additionally, Section 6.2 includes a **$5,000 penalty** for each breach of confidentiality obligations.",
+        source: "Sections 4.5 & 6.2 – Penalties",
+        page: 9
+      },
+      obligation: {
+        text: "Your key obligations under this agreement include:\n\n1. **Monthly payment** by the 1st of each month (Section 4.1)\n2. **Provide system access credentials** within 7 days of signing (Section 5.3)\n3. **Review and approve change orders** within 5 business days (Section 8.4)\n4. **Notify vendor** of any disputes within 15 days of discovery (Section 14.1)",
+        source: "Sections 4.1, 5.3, 8.4, 14.1",
+        page: 7
+      },
+      liability: {
+        text: "⚠️ This is a **High Risk** finding.\n\nSection 8.2 does not include a liability cap, meaning the service provider could be held liable for unlimited damages. This is unusual in service agreements and poses significant financial risk.\n\nMost standard agreements cap liability at **1–2× the contract value**. We recommend negotiating a cap.",
+        source: "Section 8.2 – Limitation of Liability",
+        page: 13
+      },
+      payment: {
+        text: "Payment terms are defined under Section 4.2 of the agreement.\n\nAll invoices are due within **Net 90 days** of receipt. This is notably longer than the industry standard of Net 30. Late payments incur a **1.5% monthly fee** starting from the due date.",
+        source: "Section 4.2 – Payment Terms",
+        page: 8
+      },
+      ip: {
+        text: "⚠️ **High Risk:** Section 9.1 contains a broad IP assignment clause.\n\nAll work product, inventions, and deliverables created under this agreement **automatically transfer** to the vendor upon creation. This includes pre-existing IP incorporated into deliverables.\n\nThis is highly unusual and you should seek to negotiate a license-only arrangement.",
+        source: "Section 9.1 – IP Assignment",
+        page: 14
+      },
+      default: {
+        text: "Based on my analysis of **Service Agreement – Acme Technologies.pdf**, I can help you understand the contract terms, identify risks, and extract key obligations.\n\nCould you be more specific about what you'd like to know? For example, you can ask about payment terms, termination clauses, liability, IP rights, or any other provisions.",
+        source: null,
+        page: null
+      }
+    };
+
+    const INITIAL_MESSAGES = [
+      {
+        id: 1, role: "ai",
+        text: "I've finished analysing **Service Agreement – Acme Technologies.pdf** (23 pages).\n\nI found **4 high-risk clauses**, including an uncapped liability clause and a broad IP assignment. Would you like me to walk you through the key findings?",
+        source: null, page: null,
+        time: "2:30 PM"
+      }
+    ];
+
+    const OBLIGATIONS_DATA = [
+      { id:1, obligation: "Monthly invoice payment",        party: "Client", deadline: "1st of each month",  frequency: "Monthly",   status: "upcoming" },
+      { id:2, obligation: "Provide system access credentials", party: "Client", deadline: "Within 7 days",     frequency: "One-time",  status: "pending" },
+      { id:3, obligation: "Deliver quarterly reports",      party: "Vendor", deadline: "End of each quarter", frequency: "Quarterly", status: "upcoming" },
+      { id:4, obligation: "Maintain data backups",          party: "Vendor", deadline: "Ongoing",             frequency: "Daily",     status: "active" },
+      { id:5, obligation: "Conduct security audit",         party: "Vendor", deadline: "Dec 31, 2026",        frequency: "Annual",    status: "upcoming" },
+      { id:6, obligation: "Submit renewal decision",        party: "Client", deadline: "Nov 15, 2026",        frequency: "Annual",    status: "overdue" },
+      { id:7, obligation: "Notify of service disruptions",  party: "Vendor", deadline: "Within 4 hours",      frequency: "As needed", status: "active" },
+      { id:8, obligation: "Review SLA compliance",          party: "Client", deadline: "Quarterly",           frequency: "Quarterly", status: "upcoming" },
+      { id:9, obligation: "Update insurance certificates",  party: "Vendor", deadline: "Jan 1, 2027",         frequency: "Annual",    status: "upcoming" },
+      { id:10,obligation: "Provide change order approvals", party: "Client", deadline: "Within 5 days",       frequency: "As needed", status: "active" },
+    ];
+
+    const CONTRACTS_DATA = [
+      { id:1, name:"Service Agreement – Acme Technologies.pdf",  type:"Service Agreement", uploaded:"Nov 10, 2026", pages:23, risk:"high",   status:"analysed" },
+      { id:2, name:"NDA – GlobalTech Partners.pdf",              type:"NDA",               uploaded:"Nov 8, 2026",  pages:8,  risk:"low",    status:"analysed" },
+      { id:3, name:"Vendor Agreement – CloudSoft Inc.pdf",       type:"Vendor Agreement",  uploaded:"Nov 5, 2026",  pages:34, risk:"high",   status:"analysed" },
+      { id:4, name:"Employment Contract – Sarah Chen.pdf",       type:"Employment",        uploaded:"Oct 29, 2026", pages:12, risk:"medium", status:"analysed" },
+      { id:5, name:"SLA – DataCore Systems.pdf",                 type:"SLA",               uploaded:"Oct 22, 2026", pages:6,  risk:"low",    status:"analysed" },
+      { id:6, name:"Lease Agreement – Office Space 4B.pdf",      type:"Real Estate",       uploaded:"Oct 15, 2026", pages:18, risk:"medium", status:"analysed" },
+      { id:7, name:"Partnership Agreement – Nexus Group.pdf",    type:"Partnership",       uploaded:"Oct 10, 2026", pages:27, risk:"high",   status:"reviewing" },
+      { id:8, name:"Licensing Agreement – TechBridge.pdf",       type:"Licensing",         uploaded:"Oct 2, 2026",  pages:15, risk:"medium", status:"pending" },
+    ];
+
+    const COMPARE_DATA = [
+      { clause:"Payment Terms",       vendor:"Net 90 days",          company:"Net 30 days",             status:"differs" },
+      { clause:"Liability Cap",        vendor:"Uncapped",             company:"2× contract value",       status:"missing" },
+      { clause:"Termination Notice",   vendor:"30 days",              company:"60 days",                 status:"differs" },
+      { clause:"Auto-renewal",         vendor:"Yes, 15-day opt-out",  company:"No auto-renewal",         status:"differs" },
+      { clause:"Governing Law",        vendor:"Not specified",         company:"State of California",     status:"missing" },
+      { clause:"IP Assignment",        vendor:"Full assignment",       company:"License only",            status:"differs" },
+      { clause:"Dispute Resolution",   vendor:"Arbitration only",      company:"Litigation or Arb",       status:"differs" },
+      { clause:"Confidentiality",      vendor:"2 years post-term",     company:"5 years post-term",       status:"differs" },
+      { clause:"Force Majeure",        vendor:"Not included",          company:"Included",                status:"missing" },
+      { clause:"Indemnification",      vendor:"Mutual",                company:"Vendor only",             status:"differs" },
+    ];
+
+    // ===========================
+    // SVG ICONS
+    // ===========================
+    const Icons = {
+      Chat: () => (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+      ),
+      Analysis: () => (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="6" y1="20" x2="6" y2="14"/>
+        </svg>
+      ),
+      Compare: () => (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="3" width="7" height="18"/><rect x="14" y="3" width="7" height="18"/>
+        </svg>
+      ),
+      Obligations: () => (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+          <line x1="8" y1="18" x2="21" y2="18"/>
+          <polyline points="3,6 4,7 6,5"/><polyline points="3,12 4,13 6,11"/><polyline points="3,18 4,19 6,17"/>
+        </svg>
+      ),
+      Contracts: () => (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+        </svg>
+      ),
+      Settings: () => (
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      ),
+      Document: () => (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4F46E5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
+        </svg>
+      ),
+      Paperclip: () => (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+        </svg>
+      ),
+      Send: () => (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+      ),
+      Close: () => (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      ),
+      ChevronLeft: () => (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      ),
+      ChevronRight: () => (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      ),
+      Upload: () => (
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
+          <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+        </svg>
+      ),
+      Plus: () => (
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      ),
+      Search: () => (
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+      ),
+      Warning: () => (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      ),
+      CheckCircle: () => (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+      ),
+      Hamburger: () => (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      ),
+      ArrowRight: () => (
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+        </svg>
+      ),
+    };
+
+    // ===========================
+    // RISK GAUGE SVG
+    // ===========================
+    function RiskGauge({ score, size = 120 }) {
+      const r = 46;
+      const cx = 60; const cy = 56;
+      const circumference = Math.PI * r;
+      const pct = Math.min(score / 100, 1);
+      const color = score >= 65 ? '#DC2626' : score >= 40 ? '#D97706' : '#16A34A';
+      const label = score >= 65 ? 'High Risk' : score >= 40 ? 'Medium Risk' : 'Low Risk';
+      const bgDash = `${circumference} ${circumference}`;
+      const fgDash = `${circumference * pct} ${circumference}`;
+
+      return (
+        <div className="risk-gauge-wrap">
+          <svg width={size} height={size * 0.65} viewBox="0 0 120 80">
+            <path d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`} fill="none" stroke="#E8E5E0" strokeWidth="10" strokeLinecap="round"/>
+            <path d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`} fill="none" stroke={color} strokeWidth="10" strokeLinecap="round"
+              strokeDasharray={fgDash} strokeDashoffset="0"/>
+          </svg>
+          <div className="risk-score-num">{score}<span style={{fontSize:14,fontWeight:400,color:'var(--text-muted)'}}>/100</span></div>
+          <span className={`risk-badge ${score >= 65 ? 'high' : score >= 40 ? 'medium' : 'low'}`}>{label}</span>
+        </div>
+      );
+    }
+
+    // ===========================
+    // RENDER FORMATTED TEXT
+    // ===========================
+    function FormattedText({ text }) {
+      const lines = text.split('\n');
+      const elements = [];
+      let listItems = [];
+      let inList = false;
+      let listType = null;
+
+      const flushList = () => {
+        if (listItems.length) {
+          const Tag = listType === 'ol' ? 'ol' : 'ul';
+          elements.push(<Tag key={`list-${elements.length}`}>{listItems}</Tag>);
+          listItems = [];
+          inList = false;
+          listType = null;
+        }
+      };
+
+      const renderInline = (str, key) => {
+        const parts = str.split(/(\*\*[^*]+\*\*)/g);
+        return parts.map((p, i) => {
+          if (p.startsWith('**') && p.endsWith('**')) {
+            return <strong key={i}>{p.slice(2,-2)}</strong>;
+          }
+          return p;
+        });
+      };
+
+      lines.forEach((line, idx) => {
+        const olMatch = line.match(/^(\d+)\.\s+(.*)/);
+        const ulMatch = line.match(/^[-*]\s+(.*)/);
+
+        if (olMatch) {
+          if (!inList || listType !== 'ol') { flushList(); inList = true; listType = 'ol'; }
+          listItems.push(<li key={idx}>{renderInline(olMatch[2])}</li>);
+        } else if (ulMatch) {
+          if (!inList || listType !== 'ul') { flushList(); inList = true; listType = 'ul'; }
+          listItems.push(<li key={idx}>{renderInline(ulMatch[1])}</li>);
+        } else {
+          flushList();
+          if (line.trim()) {
+            elements.push(<p key={idx}>{renderInline(line)}</p>);
+          }
+        }
+      });
+      flushList();
+
+      return <div className="msg-text">{elements}</div>;
+    }
+
+    // ===========================
+    // DOCUMENT PREVIEW MODAL
+    // ===========================
+    function DocModal({ onClose }) {
+      const [page, setPage] = useState(17);
+      useEffect(() => {
+        const handler = (e) => { if (e.key === 'Escape') onClose(); };
+        window.addEventListener('keydown', handler);
+        return () => window.removeEventListener('keydown', handler);
+      }, [onClose]);
+
+      return (
+        <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+          <div className="modal modal-doc">
+            <div className="modal-header">
+              <div style={{display:'flex',alignItems:'center',gap:10}}>
+                <div className="contract-icon"><Icons.Document/></div>
+                <span className="modal-title">Service Agreement – Acme Technologies.pdf</span>
+              </div>
+              <button className="modal-close" onClick={onClose}><Icons.Close/></button>
+            </div>
+            <div className="modal-toolbar">
+              <button className="page-nav-btn" onClick={()=>setPage(p=>Math.max(1,p-1))} disabled={page<=1}><Icons.ChevronLeft/></button>
+              <span className="page-indicator">Page {page} of 23</span>
+              <button className="page-nav-btn" onClick={()=>setPage(p=>Math.min(23,p+1))} disabled={page>=23}><Icons.ChevronRight/></button>
+            </div>
+            <div className="modal-doc-body">
+              {page === 17 ? (
+                <>
+                  <p style={{marginBottom:16}}>...preceding obligations shall survive termination of this Agreement and shall remain in full force and effect regardless of the reason for termination.</p>
+                  <div className="doc-section-label">§ 12.3 Termination for Convenience</div>
+                  <div className="doc-annotation">
+                    <span style={{color:'var(--accent)'}}>§</span>
+                    <span className="doc-annotation-text">Section 12.3 – Termination (Referenced)</span>
+                  </div>
+                  <p style={{marginBottom:12}}>Either party may terminate this Agreement for any reason or for no reason by providing <span className="doc-highlight">written notice of thirty (30) days</span> to the other party. Such notice shall be delivered via certified mail or electronic communication to the designated representative of the other party.</p>
+                  <p style={{marginBottom:12}}>Upon delivery of said termination notice, the receiving party shall have thirty (30) days to wind down any ongoing work streams, return confidential materials, and settle all outstanding invoices. The terminating party shall compensate the other party for all work completed up to and including the effective date of termination.</p>
+                  <p style={{marginBottom:12}}>Notwithstanding the foregoing, termination for cause pursuant to Section 12.1 shall be effective immediately upon delivery of notice. Termination for cause includes, but is not limited to, material breach of agreement terms, insolvency, or violation of applicable law.</p>
+                  <p>The provisions of Sections 7 (Confidentiality), 9 (IP Assignment), and 13 (Indemnification) shall survive any termination or expiration of this Agreement.</p>
+                </>
+              ) : (
+                <div style={{textAlign:'center',paddingTop:60,color:'var(--text-muted)'}}>
+                  <div style={{fontSize:40,marginBottom:12}}>📄</div>
+                  <div style={{fontSize:14,color:'var(--text-secondary)'}}>Page {page} content</div>
+                  <div style={{fontSize:12,marginTop:4}}>Navigate to Page 17 to see the highlighted termination clause.</div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ===========================
+    // UPLOAD MODAL
+    // ===========================
+    function UploadModal({ onClose }) {
+      const [dragOver, setDragOver] = useState(false);
+      const [uploadState, setUploadState] = useState('idle'); // idle | uploading | success
+      const [progress, setProgress] = useState(0);
+      const [contractName, setContractName] = useState('');
+      const [contractType, setContractType] = useState('');
+      const fileRef = useRef(null);
+
+      useEffect(() => {
+        const handler = (e) => { if (e.key === 'Escape') onClose(); };
+        window.addEventListener('keydown', handler);
+        return () => window.removeEventListener('keydown', handler);
+      }, [onClose]);
+
+      const simulateUpload = () => {
+        setUploadState('uploading');
+        setProgress(0);
+        let p = 0;
+        const interval = setInterval(() => {
+          p += Math.random() * 25;
+          if (p >= 100) {
+            p = 100;
+            clearInterval(interval);
+            setTimeout(() => setUploadState('success'), 200);
+          }
+          setProgress(Math.min(p, 100));
+        }, 180);
+      };
+
+      const handleDrop = (e) => {
+        e.preventDefault();
+        setDragOver(false);
+        simulateUpload();
+      };
+
+      return (
+        <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+          <div className="modal modal-upload">
+            <div className="modal-header">
+              <span className="modal-title">Upload Contract</span>
+              <button className="modal-close" onClick={onClose}><Icons.Close/></button>
+            </div>
+            <div className="modal-body">
+              {uploadState === 'success' ? (
+                <div className="upload-success">
+                  <div className="upload-success-icon"><Icons.CheckCircle/></div>
+                  <div className="upload-success-title">Contract Uploaded Successfully</div>
+                  <div className="upload-success-sub">Your contract is being analysed. This usually takes 20–60 seconds.</div>
+                  <button className="btn-primary" style={{marginTop:8}} onClick={onClose}>Close</button>
+                </div>
+              ) : (
+                <>
+                  <div
+                    className={`dropzone ${dragOver ? 'drag-over' : ''}`}
+                    onDragOver={e=>{e.preventDefault();setDragOver(true);}}
+                    onDragLeave={()=>setDragOver(false)}
+                    onDrop={handleDrop}
+                    onClick={()=>uploadState==='idle' && fileRef.current && fileRef.current.click()}
+                  >
+                    <input ref={fileRef} type="file" accept=".pdf,.docx,.doc" style={{display:'none'}} onChange={simulateUpload}/>
+                    <div style={{color:'var(--text-muted)'}}><Icons.Upload/></div>
+                    {uploadState === 'uploading' ? (
+                      <>
+                        <div className="drop-title">Uploading…</div>
+                        <div className="upload-progress-bar-wrap">
+                          <div className="upload-progress-bar" style={{width:`${progress}%`}}/>
+                        </div>
+                        <div className="drop-hint">{Math.round(progress)}%</div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="drop-title">Drop your contract here</div>
+                        <div className="drop-sub">or click to browse</div>
+                        <div className="drop-hint">Supports PDF, DOCX, DOC · Max 50 MB</div>
+                      </>
+                    )}
+                  </div>
+                  {uploadState === 'idle' && (
+                    <div className="upload-fields">
+                      <div>
+                        <div className="field-label">Contract Name</div>
+                        <input className="field-input" placeholder="e.g. Service Agreement – Acme Technologies" value={contractName} onChange={e=>setContractName(e.target.value)}/>
+                      </div>
+                      <div>
+                        <div className="field-label">Contract Type</div>
+                        <select className="field-select" value={contractType} onChange={e=>setContractType(e.target.value)}>
+                          <option value="">Select type…</option>
+                          <option>Service Agreement</option>
+                          <option>NDA</option>
+                          <option>Vendor Agreement</option>
+                          <option>Employment Contract</option>
+                          <option>SLA</option>
+                          <option>Real Estate Lease</option>
+                          <option>Partnership Agreement</option>
+                          <option>Licensing Agreement</option>
+                          <option>Other</option>
+                        </select>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+            {uploadState === 'idle' && (
+              <div className="modal-footer">
+                <button className="btn-primary" style={{width:'100%',justifyContent:'center'}} onClick={simulateUpload}>
+                  <Icons.Upload/> Upload & Analyse
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // ===========================
+    // SIDEBAR
+    // ===========================
+    function Sidebar({ activePage, setActivePage, collapsed, setCollapsed }) {
+      const navItems = [
+        { id:'chat',        label:'Chat',              Icon: Icons.Chat },
+        { id:'analysis',    label:'Contract Analysis', Icon: Icons.Analysis },
+        { id:'compare',     label:'Compare Contracts', Icon: Icons.Compare },
+        { id:'obligations', label:'Obligations',       Icon: Icons.Obligations },
+        { id:'contracts',   label:'My Contracts',      Icon: Icons.Contracts },
+      ];
+
+      return (
+        <div className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
+          <div className="sidebar-logo">
+            <div className="logo-mark">CW</div>
+            {!collapsed && (
+              <div className="logo-text">
+                <div className="logo-name">ClauseWise AI</div>
+                <div className="logo-sub">Contract Intelligence</div>
+              </div>
+            )}
+            <button className="sidebar-toggle-btn" onClick={()=>setCollapsed(c=>!c)} title={collapsed ? 'Expand' : 'Collapse'}>
+              {collapsed ? <Icons.ChevronRight/> : <Icons.ChevronLeft/>}
+            </button>
+          </div>
+
+          <nav className="sidebar-nav">
+            {navItems.map(item => (
+              <div
+                key={item.id}
+                className={`nav-item ${activePage === item.id ? 'active' : ''}`}
+                onClick={() => setActivePage(item.id)}
+                title={collapsed ? item.label : ''}
+              >
+                <item.Icon/>
+                {!collapsed && <span className="nav-label">{item.label}</span>}
+              </div>
+            ))}
+          </nav>
+
+          <div className="sidebar-divider"/>
+          <div className="sidebar-user">
+            <div className="user-avatar">SR</div>
+            {!collapsed && (
+              <>
+                <div className="user-info">
+                  <div className="user-name">Sanjay Raj</div>
+                  <div className="user-role">Legal Team</div>
+                </div>
+                <button className="settings-btn" title="Settings"><Icons.Settings/></button>
+              </>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // ===========================
+    // INSIGHTS PANEL
+    // ===========================
+    function InsightsPanel({ onViewDoc }) {
+      return (
+        <div className="insights-panel">
+          <div className="insights-title">Contract Overview</div>
+
+          <div className="risk-section">
+            <div className="section-label">Risk Score</div>
+            <RiskGauge score={68} size={140}/>
+          </div>
+
+          <div className="divider"/>
+
+          <div>
+            <div className="section-label">Contract Details</div>
+            <div className="contract-details">
+              {[
+                ['Contract Type', 'Service Agreement'],
+                ['Duration', '12 Months'],
+                ['Client', 'ABC Solutions Pvt. Ltd.'],
+                ['Vendor', 'Acme Technologies Pvt. Ltd.'],
+              ].map(([label, value]) => (
+                <div className="detail-row" key={label}>
+                  <div className="detail-label">{label}</div>
+                  <div className="detail-value">{value}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="divider"/>
+
+          <div>
+            <div className="section-label">Clause Summary</div>
+            <div className="clause-summary">
+              {[
+                { label:'High Risk Clauses',       count:4,  type:'danger' },
+                { label:'Medium Risk Clauses',      count:7,  type:'warning' },
+                { label:'Low Risk Clauses',         count:12, type:'success' },
+                { label:'Extracted Obligations',    count:10, type:'indigo' },
+              ].map(row => (
+                <div className="clause-row" key={row.label}>
+                  <div className={`clause-dot ${row.type}`}/>
+                  <span className="clause-label">{row.label}</span>
+                  <div className={`clause-count ${row.type}`}>{row.count}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ===========================
+    // CHAT PAGE
+    // ===========================
+    function ChatPage({ showDocModal, setShowDocModal }) {
+      const [messages, setMessages] = useState(INITIAL_MESSAGES);
+      const [inputValue, setInputValue] = useState('');
+      const chatRef = useRef(null);
+      const inputRef = useRef(null);
+
+      const scrollToBottom = () => {
+        if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
+      };
+
+      useEffect(() => { scrollToBottom(); }, [messages]);
+
+      const getResponse = (text) => {
+        const lower = text.toLowerCase();
+        for (const key of Object.keys(MOCK_RESPONSES)) {
+          if (key !== 'default' && lower.includes(key)) return MOCK_RESPONSES[key];
+        }
+        return MOCK_RESPONSES.default;
+      };
+
+      const sendMessage = useCallback((text) => {
+        if (!text.trim()) return;
+        const userMsg = { id: Date.now(), role:'user', text: text.trim(), time: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) };
+        setMessages(prev => [...prev, userMsg]);
+        setInputValue('');
+
+        setTimeout(() => {
+          const resp = getResponse(text);
+          const aiMsg = {
+            id: Date.now()+1, role:'ai',
+            text: resp.text,
+            source: resp.source, page: resp.page,
+            time: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})
+          };
+          setMessages(prev => [...prev, aiMsg]);
+        }, 320);
+      }, []);
+
+      const handleKeyDown = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(inputValue); }
+      };
+
+      const suggested = [
+        "Are there any penalty charges?",
+        "What are my key obligations?",
+        "Is there a liability limit?",
+      ];
+
+      return (
+        <div className="page-content">
+          {/* Contract Header */}
+          <div className="contract-header">
+            <div className="contract-icon"><Icons.Document/></div>
+            <div className="contract-info">
+              <div className="contract-name">Service Agreement – Acme Technologies.pdf</div>
+              <div className="contract-meta">23 pages · Service Agreement</div>
+            </div>
+            <span className="badge-analysed">Analysed</span>
+          </div>
+
+          {/* Messages */}
+          <div className="chat-area" ref={chatRef}>
+            {messages.map(msg => (
+              <div key={msg.id} className={`msg-wrap ${msg.role}`}>
+                <div className="msg-row">
+                  <div className={`msg-avatar ${msg.role}`}>{msg.role === 'user' ? 'SR' : 'CW'}</div>
+                  <div className="msg-bubble">
+                    <FormattedText text={msg.text}/>
+                  </div>
+                </div>
+                <div className="msg-time">{msg.time}</div>
+                {msg.role === 'ai' && msg.source && (
+                  <div className="evidence-card">
+                    <span className="evidence-icon">§</span>
+                    <div className="evidence-info">
+                      <div className="evidence-source">Source: {msg.source}</div>
+                      <div className="evidence-page">Page {msg.page}</div>
+                    </div>
+                    <button className="evidence-link" onClick={() => setShowDocModal(true)}>
+                      View in document <Icons.ArrowRight/>
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Suggested */}
+          <div className="suggested-wrap">
+            <span className="suggested-label">Suggested</span>
+            <div className="suggested-pills">
+              {suggested.map(q => (
+                <button key={q} className="suggested-pill" onClick={() => sendMessage(q)}>{q}</button>
+              ))}
+            </div>
+          </div>
+
+          {/* Input */}
+          <div className="chat-input-area">
+            <div className="chat-input-container">
+              <button className="attach-btn"><Icons.Paperclip/></button>
+              <textarea
+                ref={inputRef}
+                className="chat-input"
+                rows={1}
+                placeholder="Ask anything about this contract…"
+                value={inputValue}
+                onChange={e => setInputValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+              />
+              <button className="send-btn" onClick={() => sendMessage(inputValue)} disabled={!inputValue.trim()}>
+                <Icons.Send/>
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ===========================
+    // ANALYSIS PAGE
+    // ===========================
+    function AnalysisPage() {
+      const highRisk = [
+        { num:1, title:"Unlimited Liability Clause",     ref:"Section 8.2 · Clause 3", excerpt:'"The service provider shall be liable for all damages, direct or indirect, arising from any breach…"', risk:"Uncapped liability exposure for the client." },
+        { num:2, title:"Unilateral Amendment Right",     ref:"Section 15.1",            excerpt:'"The company reserves the right to modify terms and conditions at any time with reasonable notice…"', risk:"Vendor can change terms without consent." },
+        { num:3, title:"Auto-renewal with Short Notice", ref:"Section 11.4",            excerpt:'"This Agreement shall automatically renew unless cancelled with fifteen (15) days prior notice…"', risk:"Auto-renews with only 15-day cancellation window." },
+        { num:4, title:"Broad IP Assignment",            ref:"Section 9.1",             excerpt:'"All work product, inventions, and deliverables shall automatically vest in and be assigned to Vendor…"', risk:"All work product IP transfers to vendor automatically." },
+      ];
+      const medRisk = [
+        { num:1, title:"Payment Terms — Net 90 Days",   ref:"Section 4.2", risk:"Net 90 significantly exceeds industry standard of Net 30." },
+        { num:2, title:"Arbitration Only Dispute Resolution", ref:"Section 14.3", risk:"No option for court litigation; arbitration is vendor's preferred forum." },
+        { num:3, title:"Vague Data Processing Clauses", ref:"Section 7.1",  risk:"Data handling and sub-processor obligations are ambiguously defined." },
+      ];
+      const obligations = [
+        { party:"Client", obligation:"Monthly invoice payment",          deadline:"1st of each month" },
+        { party:"Client", obligation:"Provide system access credentials", deadline:"Within 7 days" },
+        { party:"Vendor", obligation:"Deliver quarterly reports",         deadline:"End of each quarter" },
+        { party:"Vendor", obligation:"Maintain data backups",             deadline:"Ongoing / Daily" },
+      ];
+
+      return (
+        <div className="page-content">
+          <div className="page-header">
+            <div className="page-header-left">
+              <div className="page-h1">Contract Analysis</div>
+              <div className="page-subtitle">Service Agreement – Acme Technologies.pdf · 23 pages</div>
+            </div>
+          </div>
+          <div className="page-scroll">
+            <div className="analysis-grid">
+
+              {/* Risk Overview */}
+              <div className="card risk-overview-card">
+                <div className="risk-gauge-side">
+                  <RiskGauge score={68} size={150}/>
+                </div>
+                <div className="risk-mini-stats">
+                  {[
+                    {label:'High Risk', num:4, type:'danger'},
+                    {label:'Medium Risk', num:7, type:'warning'},
+                    {label:'Low Risk', num:12, type:'success'},
+                  ].map(s => (
+                    <div className={`mini-stat ${s.type}`} key={s.label}>
+                      <div className="mini-stat-num">{s.num}</div>
+                      <div className="mini-stat-label">{s.label} Clauses</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* High Risk */}
+              <div className="findings-section">
+                <div className="findings-title" style={{color:'var(--danger)'}}>⚠ High Risk Findings</div>
+                {highRisk.map(f => (
+                  <div className="finding-card high" key={f.num}>
+                    <div className="finding-card-inner">
+                      <div className="finding-card-body">
+                        <div className="finding-num">Finding #{f.num}</div>
+                        <div className="finding-title">{f.title}</div>
+                        <div className="finding-ref">{f.ref}</div>
+                        <div className="finding-excerpt">{f.excerpt}</div>
+                        <div className="finding-risk"><strong>Risk:</strong> {f.risk}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Medium Risk */}
+              <div className="findings-section">
+                <div className="findings-title" style={{color:'var(--warning)'}}>Medium Risk Findings</div>
+                {medRisk.map(f => (
+                  <div className="finding-card medium" key={f.num}>
+                    <div className="finding-card-inner">
+                      <div className="finding-card-body">
+                        <div className="finding-title">{f.title}</div>
+                        <div className="finding-ref">{f.ref}</div>
+                        <div className="finding-risk" style={{marginTop:4}}><strong>Risk:</strong> {f.risk}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Missing */}
+              <div className="missing-card">
+                <div className="missing-title"><Icons.Warning/> Missing Provisions</div>
+                <ul className="missing-list">
+                  <li>Force Majeure clause not found</li>
+                  <li>Governing law not specified</li>
+                  <li>SLA / uptime guarantees absent</li>
+                </ul>
+              </div>
+
+              {/* Obligations Table */}
+              <div>
+                <div className="findings-title" style={{marginBottom:12}}>Extracted Obligations</div>
+                <div className="card" style={{padding:0,overflow:'hidden'}}>
+                  <div className="table-wrap">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Party</th><th>Obligation</th><th>Deadline</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {obligations.map((o,i) => (
+                          <tr key={i}>
+                            <td style={{fontWeight:600,color:'var(--text-primary)'}}>{o.party}</td>
+                            <td>{o.obligation}</td>
+                            <td style={{color:'var(--text-secondary)'}}>{o.deadline}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ===========================
+    // COMPARE PAGE
+    // ===========================
+    function ComparePage() {
+      const matches = COMPARE_DATA.filter(r => r.status === 'match').length;
+      const differs = COMPARE_DATA.filter(r => r.status === 'differs').length;
+      const missing = COMPARE_DATA.filter(r => r.status === 'missing').length;
+
+      const statusLabel = { match:'Match', differs:'Differs', missing:'Missing' };
+
+      return (
+        <div className="page-content">
+          <div className="page-header">
+            <div className="page-header-left">
+              <div className="page-h1">Compare Contracts</div>
+              <div className="page-subtitle">Side-by-side clause comparison</div>
+            </div>
+          </div>
+          <div className="page-scroll">
+            <div className="compare-selectors">
+              <div className="contract-selector-badge">
+                <Icons.Document/>
+                Vendor Agreement v2.1
+              </div>
+              <span className="vs-label">vs</span>
+              <div className="contract-selector-badge">
+                <Icons.Document/>
+                Company Template
+              </div>
+            </div>
+
+            <div className="compare-summary-bar">
+              <div className="compare-sum-item">
+                <div className="compare-sum-dot" style={{background:'var(--success)'}}/>
+                <span style={{color:'var(--success)',fontWeight:600}}>{matches} match{matches!==1?'es':''}</span>
+              </div>
+              <div style={{width:1,height:14,background:'var(--border)'}}/>
+              <div className="compare-sum-item">
+                <div className="compare-sum-dot" style={{background:'var(--warning)'}}/>
+                <span style={{color:'var(--warning)',fontWeight:600}}>{differs} difference{differs!==1?'s':''}</span>
+              </div>
+              <div style={{width:1,height:14,background:'var(--border)'}}/>
+              <div className="compare-sum-item">
+                <div className="compare-sum-dot" style={{background:'var(--danger)'}}/>
+                <span style={{color:'var(--danger)',fontWeight:600}}>{missing} missing clause{missing!==1?'s':''}</span>
+              </div>
+            </div>
+
+            <div className="card" style={{padding:0,overflow:'hidden'}}>
+              <div className="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th style={{width:'18%'}}>Clause</th>
+                      <th style={{width:'30%'}}>Vendor Agreement</th>
+                      <th style={{width:'30%'}}>Company Template</th>
+                      <th style={{width:'14%'}}>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {COMPARE_DATA.map((row, i) => (
+                      <tr key={i}>
+                        <td style={{fontWeight:600,color:'var(--text-primary)'}}>{row.clause}</td>
+                        <td style={{color: row.status==='missing' ? 'var(--danger)' : 'var(--text-secondary)'}}>{row.vendor}</td>
+                        <td>{row.company}</td>
+                        <td><span className={`status-badge ${row.status}`}>{statusLabel[row.status]}</span></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ===========================
+    // OBLIGATIONS PAGE
+    // ===========================
+    function ObligationsPage() {
+      const [filter, setFilter] = useState('all');
+      const tabs = ['all','Client','Vendor','overdue'];
+      const tabLabels = { all:'All', Client:'Client', Vendor:'Vendor', overdue:'Overdue' };
+
+      const filtered = OBLIGATIONS_DATA.filter(o => {
+        if (filter === 'all') return true;
+        if (filter === 'overdue') return o.status === 'overdue';
+        return o.party === filter;
+      });
+
+      return (
+        <div className="page-content">
+          <div className="page-header">
+            <div className="page-header-left">
+              <div className="page-h1">Obligations Tracker</div>
+              <div className="page-subtitle">Extracted from Service Agreement – Acme Technologies.pdf</div>
+            </div>
+          </div>
+          <div className="page-scroll">
+            <div className="filter-tabs">
+              {tabs.map(t => (
+                <button key={t} className={`filter-tab ${filter===t?'active':''}`} onClick={()=>setFilter(t)}>
+                  {tabLabels[t]}
+                </button>
+              ))}
+            </div>
+            <div className="card" style={{padding:0,overflow:'hidden'}}>
+              <div className="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Obligation</th><th>Party</th><th>Deadline</th>
+                      <th>Frequency</th><th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map(o => (
+                      <tr key={o.id}>
+                        <td style={{fontWeight:500,color:'var(--text-primary)'}}>{o.obligation}</td>
+                        <td style={{color: o.party==='Client' ? 'var(--accent)' : 'var(--warning)', fontWeight:600}}>{o.party}</td>
+                        <td>{o.deadline}</td>
+                        <td style={{color:'var(--text-muted)'}}>{o.frequency}</td>
+                        <td><span className={`obligation-status ${o.status}`}>{o.status.charAt(0).toUpperCase()+o.status.slice(1)}</span></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ===========================
+    // CONTRACTS PAGE
+    // ===========================
+    function ContractsPage({ setShowUploadModal }) {
+      const [search, setSearch] = useState('');
+
+      const filtered = CONTRACTS_DATA.filter(c =>
+        c.name.toLowerCase().includes(search.toLowerCase()) ||
+        c.type.toLowerCase().includes(search.toLowerCase())
+      );
+
+      return (
+        <div className="page-content">
+          <div className="page-header">
+            <div className="page-header-left">
+              <div className="page-h1">My Contracts</div>
+              <div className="page-subtitle">{CONTRACTS_DATA.length} contracts · {CONTRACTS_DATA.filter(c=>c.status==='analysed').length} analysed</div>
+            </div>
+            <button className="btn-primary" onClick={() => setShowUploadModal(true)}>
+              <Icons.Plus/> Upload Contract
+            </button>
+          </div>
+          <div className="page-scroll">
+            <div className="search-bar-wrap">
+              <div className="search-input-wrap">
+                <span className="search-icon"><Icons.Search/></span>
+                <input className="search-input" placeholder="Search contracts…" value={search} onChange={e=>setSearch(e.target.value)}/>
+              </div>
+            </div>
+
+            <div className="card" style={{padding:0,overflow:'hidden'}}>
+              {filtered.length === 0 ? (
+                <div style={{padding:40,textAlign:'center',color:'var(--text-muted)'}}>No contracts found.</div>
+              ) : (
+                filtered.map(c => (
+                  <div className="contract-row" key={c.id}>
+                    <div className="contract-row-icon"><Icons.Document/></div>
+                    <div className="contract-row-info">
+                      <div className="contract-row-name">{c.name}</div>
+                      <div className="contract-row-meta">{c.type} · {c.uploaded} · {c.pages} pages</div>
+                    </div>
+                    <div className="contract-row-badges">
+                      <span className={`risk-pill ${c.risk}`}>{c.risk.charAt(0).toUpperCase()+c.risk.slice(1)}</span>
+                      <span className={`status-pill ${c.status}`}>{c.status.charAt(0).toUpperCase()+c.status.slice(1)}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ===========================
+    // APP ROOT
+    // ===========================
+    function App() {
+      const [activePage, setActivePage] = useState('chat');
+      const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+      const [showDocModal, setShowDocModal] = useState(false);
+      const [showUploadModal, setShowUploadModal] = useState(false);
+
+      const renderPage = () => {
+        switch (activePage) {
+          case 'chat':        return <ChatPage showDocModal={showDocModal} setShowDocModal={setShowDocModal}/>;
+          case 'analysis':    return <AnalysisPage/>;
+          case 'compare':     return <ComparePage/>;
+          case 'obligations': return <ObligationsPage/>;
+          case 'contracts':   return <ContractsPage setShowUploadModal={setShowUploadModal}/>;
+          default:            return <ChatPage showDocModal={showDocModal} setShowDocModal={setShowDocModal}/>;
+        }
+      };
+
+      return (
+        <div className="app-layout">
+          <Sidebar
+            activePage={activePage}
+            setActivePage={setActivePage}
+            collapsed={sidebarCollapsed}
+            setCollapsed={setSidebarCollapsed}
+          />
+
+          <div className="main-area">
+            {renderPage()}
+            {activePage === 'chat' && (
+              <InsightsPanel onViewDoc={() => setShowDocModal(true)}/>
+            )}
+          </div>
+
+          {showDocModal && <DocModal onClose={() => setShowDocModal(false)}/>}
+          {showUploadModal && <UploadModal onClose={() => setShowUploadModal(false)}/>}
+        </div>
+      );
+    }
+
+    // ===========================
+    // MOUNT
+    // ===========================
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App/>);
+  </script>
+</body>
+</html>
